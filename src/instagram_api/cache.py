@@ -17,8 +17,9 @@ logger = logging.getLogger(__package__)
 
 
 class CacheLayer:
-    def __init__(self, redis_url: str):
+    def __init__(self, redis_url: str, cache_duration: int = 3600):
         self._redis = Redis.from_url(redis_url)
+        self.cache_duration = cache_duration
 
     async def get_account_followers(self, handle: str) -> Optional[List[Follower]]:
         key = f"followers:{handle}"
@@ -36,7 +37,7 @@ class CacheLayer:
         # Use pipeline to atomically add follower and set expiration
         async with self._redis.pipeline() as pipe:
             await pipe.execute_command("RPUSH", key, follower_bytes)
-            await pipe.expire(key, cache_settings.cache_duration)
+            await pipe.expire(key, self.cache_duration)
             await pipe.execute()
 
     async def get_account_info(self, handle: str) -> Optional[UserInfoResponse]:
@@ -51,7 +52,7 @@ class CacheLayer:
     async def cache_account_info(self, handle: str, info: UserInfoResponse):
         key = f"account_info:{handle}"
         info_bytes = pickle.dumps(info)
-        await self._redis.set(key, info_bytes, ex=cache_settings.cache_duration)
+        await self._redis.set(key, info_bytes, ex=self.cache_duration)
 
     async def get_account_posts(self, handle: str) -> Optional[List[Post]]:
         key = f"posts:{handle}"
@@ -69,7 +70,7 @@ class CacheLayer:
         # Use pipeline to atomically add post and set expiration
         async with self._redis.pipeline() as pipe:
             await pipe.execute_command("RPUSH", key, post_bytes)
-            await pipe.expire(key, cache_settings.cache_duration)
+            await pipe.expire(key, self.cache_duration)
             await pipe.execute()
 
     async def get_media_comments(self, media_id: str) -> Optional[List[Comment]]:
@@ -88,7 +89,7 @@ class CacheLayer:
         # Use pipeline to atomically add comment and set expiration
         async with self._redis.pipeline() as pipe:
             await pipe.execute_command("RPUSH", key, comment_bytes)
-            await pipe.expire(key, cache_settings.cache_duration)
+            await pipe.expire(key, self.cache_duration)
             await pipe.execute()
 
     async def get_media_likes(self, media_id: str) -> Optional[List[LikesUser]]:
@@ -107,5 +108,5 @@ class CacheLayer:
         # Use pipeline to atomically add likes and set expiration
         async with self._redis.pipeline() as pipe:
             await pipe.execute_command("RPUSH", key, likes_bytes)
-            await pipe.expire(key, cache_settings.cache_duration)
+            await pipe.expire(key, self.cache_duration)
             await pipe.execute()

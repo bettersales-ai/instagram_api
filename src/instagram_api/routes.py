@@ -95,8 +95,7 @@ class InstagramAPI:
 
                         data = UserPostsResponse(**json_data)
                         if data.status == "fail":
-                            raise Exception(
-                                f"API request failed: {data.message}")
+                            raise Exception(f"API request failed: {data.message}")
                         if data.data.next_max_id:
                             # type: ignore
                             querystring["max_id"] = data.data.next_max_id
@@ -160,14 +159,13 @@ class InstagramAPI:
 
                         data = UserFollowersResponse(**json_data)
                         if data.status == "fail":
-                            raise Exception(
-                                f"API request failed: {data.message}")
+                            raise Exception(f"API request failed: {data.message}")
                         if data.data.edge_followed_by.page_info.has_next_page:
                             pagination_token = (
                                 data.data.edge_followed_by.page_info.end_cursor
                             )
                             # type: ignore
-                            querystring["end_cursor"] = pagination_token
+                            querystring["end_cursor"] = pagination_token  # type: ignore
                         else:
                             querystring.pop("end_cursor", None)
 
@@ -231,8 +229,7 @@ class InstagramAPI:
 
                         data = MediaCommentsResponse(**json_data)
                         if data.status == "fail":
-                            raise Exception(
-                                f"API request failed: {data.message}")
+                            raise Exception(f"API request failed: {data.message}")
                         if data.data.next_min_id:
                             # type: ignore
                             querystring["min_id"] = data.data.next_min_id
@@ -298,8 +295,7 @@ class InstagramAPI:
 
                         data = MediaLikesResponse(**json_data)
                         if data.status == "fail":
-                            raise Exception(
-                                f"API request failed: {data.message}")
+                            raise Exception(f"API request failed: {data.message}")
 
                         for like in data.fast:
                             await self._cache.cache_media_like(media_id, like)
